@@ -9,50 +9,63 @@ namespace MP3
 {
     public static class Play
     {
+        
+        
+        
         //Creates a SoundPlayer field
         public static SoundPlayer soundPlayer = new SoundPlayer();
 
         //Creates a songIndex variable
         public static int songIndex;
 
-        //Create a new task which is async so the Menu can continue while it's running in the background
-        public static Task PlaySong()
-        {
-            Console.WriteLine("Task started");
-            soundPlayer.PlaySync();
-            return Task.CompletedTask;
-        }
-
-
         //Creates a song looping so a song will start after the other ends
-        public static async Task<int> SongLoop(string[] songs)
+        public static async Task<int> SongLoop(string[] songsList, CancellationTokenSource CancellationTokenSource)
         {
            
             //prints songs length
-            Console.WriteLine("songs amount = " + songs.Length);
+            Console.WriteLine("songs amount = " + songsList.Length);
 
-            for (songIndex = 0; songIndex < songs.Length; songIndex++)
+            for (songIndex = 0; songIndex < songsList.Length; songIndex++)
             {
-                soundPlayer.SoundLocation = songs[songIndex];
+                soundPlayer.SoundLocation = songsList[songIndex];
                 //prints the index of the songs array for debugging
                 Console.WriteLine("Song number: " + songIndex);
 
-                await PlaySong();
+                await Task.Run(() =>
+                {
+                    if (!CancellationTokenSource.Token.IsCancellationRequested)
+                    {
+                        Console.WriteLine("Task started");
+                        soundPlayer.PlaySync();
+                    }
+                    else if (CancellationTokenSource.Token.IsCancellationRequested)
+                    {
+                        CancellationTokenSource.Dispose();
+                        Console.WriteLine("cancelled");
+                        Menu(songsList);
+                    }
+                    
+                });
+               
             }
 
             return songIndex;
         }
         //Menu function
-        public static async Task Menu(string[] songsList)
+        public static void Menu(string[] songsList)
         {
+            var CancellationTokenSource = new CancellationTokenSource();
+
+
+
             while (true)
             {
-
+                Console.WriteLine("Reached Menu");
                 switch (Console.ReadLine())
                 {
                     case "/play":
 
-                        _ = Task.Run(() => SongLoop(songsList)); //Should continue without waiting for SongLoop task
+                        _ = Task.Run(() => SongLoop(songsList, CancellationTokenSource)); 
                         break;
 
                     case "/skip":
@@ -61,14 +74,15 @@ namespace MP3
                         break;
 
                     case "/stop":
-                        StopSong();
+                        Console.WriteLine("reached stop case");
+                        CancellationTokenSource.Cancel();
+                       
                         break;
 
                     default:
                         Console.WriteLine("No songs to play.");
                         break;
                 }
-                Console.WriteLine("got out of the switch");
             }
         }
         public static void StopSong()
