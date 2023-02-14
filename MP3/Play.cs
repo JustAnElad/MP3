@@ -15,15 +15,16 @@ namespace MP3
         //Creates a songIndex variable
         public static int songIndex;
 
-        //Song thread execution
-        public static async Task PlaySong()
+        //Create a new task which is async so the Menu can continue while it's running in the background
+        public static Task PlaySong()
         {
-            Console.WriteLine("task started");
+            Console.WriteLine("Task started");
             soundPlayer.PlaySync();
+            return Task.CompletedTask;
         }
 
 
-        //Creates a song looping
+        //Creates a song looping so a song will start after the other ends
         public static async Task<int> SongLoop(string[] songs)
         {
            
@@ -42,7 +43,7 @@ namespace MP3
             return songIndex;
         }
         //Menu function
-        public static async void Menu(string[] songsList)
+        public static async Task Menu(string[] songsList)
         {
             while (true)
             {
@@ -51,26 +52,28 @@ namespace MP3
                 {
                     case "/play":
 
-                        await Play.SongLoop(songsList);
+                        _ = Task.Run(() => SongLoop(songsList)); //Should continue without waiting for SongLoop task
                         break;
 
                     case "/skip":
 
-                        Play.SkipSong(songsList);
+                        SkipSong(songsList);
                         break;
 
                     case "/stop":
-                        Play.StopSong();
+                        StopSong();
                         break;
 
                     default:
                         Console.WriteLine("No songs to play.");
                         break;
                 }
+                Console.WriteLine("got out of the switch");
             }
         }
         public static void StopSong()
-        { 
+        {
+            Console.WriteLine("reached the stop function");
             soundPlayer.Stop();
         }
         public static void SkipSong(string[] songs)

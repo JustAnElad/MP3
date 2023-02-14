@@ -29,10 +29,10 @@ namespace MP3
                 Console.WriteLine("The folder is empty.");
 
             }
-            
-            Console.Clear();
+
             //creates songs' array
             string[] songsList = new string[files.Length];
+
             //fills the array with the songs' name
             for( int i = 0; i < songsList.Length; i++)
             {
